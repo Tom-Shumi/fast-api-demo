@@ -10,23 +10,12 @@ from api.config.security import (
     verify_password,
     get_password_hash
 )
+from api.stores.user_store import users_db
 
 router = APIRouter()
-
-_users_db: dict[str, auth.UserInDB] = {}
-
-@router.on_event("startup")
-def seed_user():
-    _users_db["admin"] = auth.UserInDB(
-        username="admin",
-        full_name="Administrator",
-        disabled=False,
-        roles=["admin"],
-        hashed_password=get_password_hash("password12345"),
-    )
     
 def authenticate_user(username: str, password: str) -> auth.UserInDB | None:
-    user = _users_db.get(username)
+    user = users_db.get(username)
     if not user:
         return None
     if not verify_password(password, user.hashed_password):
