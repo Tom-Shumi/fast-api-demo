@@ -66,3 +66,17 @@ async def test_done_flag(async_client):
     
     response = await async_client.delete("/tasks/1/done")
     assert response.status_code == starlette.status.HTTP_404_NOT_FOUND
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "input_param, expectation",
+    [
+        ("2024-12-31", starlette.status.HTTP_200_OK),
+        ("2024-12-32", starlette.status.HTTP_422_UNPROCESSABLE_CONTENT),
+        ("2024/12/31", starlette.status.HTTP_422_UNPROCESSABLE_CONTENT),
+        ("2024-1201", starlette.status.HTTP_422_UNPROCESSABLE_CONTENT)
+    ]
+)
+async def test_due_date(async_client, input_param, expectation):
+    response = await async_client.post("/tasks", json={"title": "期限付きタスク", "due_date": input_param})
+    assert response.status_code == expectation

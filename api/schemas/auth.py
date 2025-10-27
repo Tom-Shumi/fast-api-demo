@@ -19,8 +19,8 @@ class UserInDB(User):
     hashed_password: str
 
 class LoginRequest(BaseModel):
-    username: str = Field(..., example="admin")
-    password: str = Field(..., example="password12345")
+    username: str = Field(..., json_schema_extra={"example": "admin"})
+    password: str = Field(..., json_schema_extra={"example": "password12345"})
 
 class TokenResponse(BaseModel):
     access_token: str
