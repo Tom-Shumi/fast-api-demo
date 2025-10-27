@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Optional, List
 
 from jose import jwt, JWTError
 from passlib.context import CryptContext
@@ -24,10 +24,10 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
-def create_access_token(subject: str, expires_delta: Optional[timedelta] = None) -> str:
+def create_access_token(subject: str, roles: Optional[List[str]] = None, expires_delta: Optional[timedelta] = None) -> str:
     expire = datetime.now(
         timezone.utc) + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode = {"sub": subject, "exp": expire}
+    to_encode = {"sub": subject, "exp": expire, "roles": roles or []}
 
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
@@ -35,6 +35,6 @@ def create_access_token(subject: str, expires_delta: Optional[timedelta] = None)
 def decode_token(token: str) -> TokenData:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return TokenData(sub=payload.get("sub"))
+        return TokenData(sub=payload.get("sub"), roles=payload.get("roles", []))
     except JWTError as e:
         raise e

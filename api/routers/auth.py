@@ -21,6 +21,7 @@ def seed_user():
         username="admin",
         full_name="Administrator",
         disabled=False,
+        roles=["admin"],
         hashed_password=get_password_hash("password12345"),
     )
     
@@ -32,6 +33,13 @@ def authenticate_user(username: str, password: str) -> auth.UserInDB | None:
         return None
     return user
 
+def require_roles(allowed: list[str]):
+    def _dep(current_user: auth.User = Depends(get_current_user)):
+        if not any(r in allowed for r in current_user.roles):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
+        return True
+    return _dep
+
 @router.post("/auth/token", response_model=auth.Token, tags=["auth"])
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     user = authenticate_user(form_data.username, form_data.password)
@@ -40,7 +48,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials",
         )
-    token = create_access_token(subject=user.username)
+    token = create_access_token(subject=user.username, roles=user.roles)
     return {"access_token": token, "token_type": "bearer"}
 
 async def get_current_user(token: str = Depends(oauth2_schema)) -> auth.User:
@@ -72,4 +80,8 @@ async def read_me(current_user: auth.User = Depends(get_current_user)):
 
 @router.get("/health", tags=["public"])
 async def health_check():
+    return {"status": "ok"}
+
+@router.get("/admin", dependencies=[Depends(require_roles(["admin"]))])
+async def admin_dashboard():
     return {"status": "ok"}
