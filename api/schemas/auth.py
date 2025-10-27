@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List
 
 class Token(BaseModel):
@@ -11,9 +11,17 @@ class TokenData(BaseModel):
 
 class User(BaseModel):
     username: str
-    full_name: str | None = None
     disabled: bool = False
     roles: List[str] = []
+    model_config = ConfigDict(from_attributes=True)
 
 class UserInDB(User):
     hashed_password: str
+
+class LoginRequest(BaseModel):
+    username: str = Field(..., example="admin")
+    password: str = Field(..., example="password12345")
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
