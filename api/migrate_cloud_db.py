@@ -24,7 +24,7 @@ def create_database():
     if not database_exists():
         root = create_engine(DB_URL, echo=True)
         with root.connect() as conn:
-            conn.execute(
+            conn.exec_driver_sql(
                 "CREATE DATABASE demo CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;")
         print("Database 'demo' created.")
         TaskBase.metadata.create_all(engine)
